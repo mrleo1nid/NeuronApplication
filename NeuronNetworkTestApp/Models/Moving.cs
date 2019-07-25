@@ -18,6 +18,16 @@ namespace NeuronNetworkTestApp.Models
             }
             return null;
         }
+        public static MapItem GetFinish(List<MapItem> Map)
+        {
+            var element = Map.Where(item => item.MapItemType == MapItemType.Finish).FirstOrDefault();
+            if (element != null)
+            {
+                return element;
+            }
+            return null;
+        }
+
 
         public static double[] GetSensorData(List<MapItem> map, MapItem player)
         {
@@ -85,7 +95,7 @@ namespace NeuronNetworkTestApp.Models
             var finditem = GetItemFromCoord(map, coord.Item1, coord.Item2);
             if (finditem!=null)
             {
-                if (finditem.MapItemType == MapItemType.FreePlace)
+                if (finditem.MapItemType == MapItemType.FreePlace || finditem.MapItemType == MapItemType.Finish)
                 {
                     return true;
                 }

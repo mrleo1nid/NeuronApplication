@@ -1,9 +1,9 @@
-﻿<Window x:Class="NeuronNetworkTestApp.MainWindow"
+﻿<Window x:Class="NeuronNetworkTestApp.Views.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:NeuronNetworkTestApp"
+        xmlns:local="clr-namespace:NeuronNetworkTestApp.Views"
         mc:Ignorable="d"
         Title="MainWindow" Height="750" Width="550">
     <Grid Margin="10">
@@ -22,9 +22,14 @@
             <Grid.ColumnDefinitions>
                 <ColumnDefinition/>
                 <ColumnDefinition/>
+                <ColumnDefinition/>
             </Grid.ColumnDefinitions>
-            <Button Grid.Row="0" Grid.Column="0" Content="Start" Name="ButtonStart" Click="ButtonStart_OnClick"></Button>
-            <Button Grid.Row="0" Grid.Column="1" Content="Stop" Name="ButtonStop" Click="ButtonStop_OnClick"></Button>
+            <Button Grid.Row="0" Grid.Column="0" Content="Move" Name="ButtonMove" Click="ButtonStart_OnClick"></Button>
+            <Button Grid.Row="1" Grid.Column="0" Content="Train" Name="ButtonTrain" Click="ButtonTrain_OnClick"></Button>
+            <Button Grid.Row="0" Grid.Column="1" Content="MoveForward" Name="ButtonForward" Click="ButtonForward_OnClick" Visibility="Collapsed"></Button>
+            <Button Grid.Row="1" Grid.Column="1" Content="MoveBack" Name="ButtonBack" Click="ButtonBack_OnClick" Visibility="Collapsed"></Button>
+            <Button Grid.Row="0" Grid.Column="2" Content="MoveLeft" Name="ButtonLeft"  Click="ButtonLeft_OnClick" Visibility="Collapsed"></Button>
+            <Button Grid.Row="1" Grid.Column="2" Content="MoveRight" Name="ButtonRight" Click="ButtonRight_OnClick" Visibility="Collapsed"></Button>
         </Grid>
     </Grid>
 </Window>

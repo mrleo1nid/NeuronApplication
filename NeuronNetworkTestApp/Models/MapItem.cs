@@ -32,6 +32,9 @@ namespace NeuronNetworkTestApp.Models
                 case MapItemType.Wall:
                     Icon = "#";
                     break;
+                case MapItemType.Finish:
+                    Icon = "F";
+                    break;
             }
         }
     }
