@@ -33,7 +33,7 @@ namespace NeuronNetworkTestApp.Views
         public MainWindow()
         {
             InitializeComponent();
-            var topology = new Topology(8, 1, 0.2, 4,4,2,2);
+            var topology = new Topology(8, 1, 0.2, 4,4);
             NeuralNetwork = new NeuralNetwork(topology);
             Errors = 0;
             Life = false;
@@ -82,7 +82,7 @@ namespace NeuronNetworkTestApp.Views
                 Finish.X,
                 Finish.Y
             };
-            inputsignal = NeuralNetwork.Normalization(inputsignal);
+          //  inputsignal = NeuralNetwork.Normalization(inputsignal);
             var res = NeuralNetwork.Predict(inputsignal).Output;
             Log($"Результат вычислений {res}");
             var action = Moving.ConvertBotResultToMove(res);
@@ -404,7 +404,7 @@ namespace NeuronNetworkTestApp.Views
         }
         private void Train(double[,] dataset, double[] truevalues)
         {
-            dataset = NeuralNetwork.Normalization(dataset);
+            //  dataset = NeuralNetwork.Normalization(dataset);
             var difference = NeuralNetwork.Learn(truevalues, dataset, 10);
             Log($"Бот успешно обучен. difference={difference}");
         }
