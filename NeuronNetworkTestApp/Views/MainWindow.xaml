@@ -24,7 +24,7 @@
                 <ColumnDefinition/>
                 <ColumnDefinition/>
             </Grid.ColumnDefinitions>
-            <Button Grid.Row="0" Grid.Column="0" Content="Move" Name="ButtonMove" Click="ButtonStart_OnClick"></Button>
+            <Button Grid.Row="0" Grid.Column="0" Content="Start" Name="ButtonMove" Click="ButtonStart_OnClick"></Button>
             <Button Grid.Row="1" Grid.Column="0" Content="Train" Name="ButtonTrain" Click="ButtonTrain_OnClick"></Button>
             <Button Grid.Row="0" Grid.Column="1" Content="MoveForward" Name="ButtonForward" Click="ButtonForward_OnClick" Visibility="Collapsed"></Button>
             <Button Grid.Row="1" Grid.Column="1" Content="MoveBack" Name="ButtonBack" Click="ButtonBack_OnClick" Visibility="Collapsed"></Button>

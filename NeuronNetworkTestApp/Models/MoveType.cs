@@ -11,6 +11,7 @@ namespace NeuronNetworkTestApp.Models
         Forward = 0,
         Back=1,
         Right=2,
-        Left =3
+        Left =3,
+        Stand = 4,
     }
 }

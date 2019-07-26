@@ -14,17 +14,17 @@ namespace NeuronNetworkTestApp.Models
         {
             FileInfo file = new FileInfo(path);
             if (!file.Exists) file.Create().Close();
-            foreach (var row in trainData)
+            using (StreamWriter sw = new StreamWriter(path, false, System.Text.Encoding.Default))
             {
-                var text = String.Empty;
-                text += row[0].ToString();
-                for (int i = 1; i < row.Length; i++)
+                foreach (var row in trainData)
                 {
-                    text += $",{row[i]}";
-                }
-                using (StreamWriter sw = new StreamWriter(path, false, System.Text.Encoding.Default))
-                {
-                    sw.WriteLine(text);
+                  var text = String.Empty;
+                  text += row[0].ToString();
+                  for (int i = 1; i < row.Length; i++)
+                  {
+                      text += $";{row[i]}";
+                  }
+                  sw.WriteLine(text);
                 }
             }
         }
@@ -36,8 +36,8 @@ namespace NeuronNetworkTestApp.Models
                 string line;
                 while ((line = sr.ReadLine()) != null)
                 {
-                    var mass = line.Split(',');
-                    double[] data = new double[8];
+                    var mass = line.Split(';');
+                    double[] data = new double[9];
                     for (int i = 0; i < mass.Length; i++)
                     {
                         data[i] = Convert.ToDouble(mass[i]);
@@ -46,6 +46,33 @@ namespace NeuronNetworkTestApp.Models
                 }
             }
             return traindata;
+        }
+
+        public static double[,] CreateMatrixToArray(double[][] array)
+        {
+            double[,] matrix = new double[array.Length, array[0].Length];
+            for (int i = 0; i < array.Length; i++)
+            {
+                for (int j = 0; j < array[i].Length; j++)
+                {
+                    matrix[i, j] = array[i][j];
+                }
+            }
+            return matrix;
+        }
+
+        public static void ClearDataSet()
+        {
+            FileInfo file = new FileInfo(path);
+            if (file.Exists)
+            {
+                file.Delete();
+                file.Create().Close();
+            }
+            else
+            {
+                file.Create().Close();
+            }
         }
     }
 }

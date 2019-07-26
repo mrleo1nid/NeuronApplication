@@ -4,6 +4,7 @@ using System.Data.OleDb;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using NeuralNetworks;
 
 namespace NeuronNetworkTestApp.Models
 {
@@ -27,8 +28,6 @@ namespace NeuronNetworkTestApp.Models
             }
             return null;
         }
-
-
         public static double[] GetSensorData(List<MapItem> map, MapItem player)
         {
             double[] result = new double[4];
@@ -71,7 +70,6 @@ namespace NeuronNetworkTestApp.Models
 
             return result;
         }
-
         public static Tuple<int,int> ConvertMovingTypeToCoord(MoveType type, MapItem player)
         {
             switch (type)
@@ -88,7 +86,6 @@ namespace NeuronNetworkTestApp.Models
                     return new Tuple<int, int>(player.X, player.Y);
             }
         }
-
         public static bool CanMove(MapItem player, MoveType moveType, List<MapItem> map)
         {
             var coord = ConvertMovingTypeToCoord(moveType, player);
@@ -109,7 +106,6 @@ namespace NeuronNetworkTestApp.Models
                 return false;
             }
         }
-
         public static MapItem GetItemFromCoord(List<MapItem> map,int x, int y)
         {
             var element = map.Where(item => item.X == x && item.Y == y).FirstOrDefault();
@@ -119,7 +115,6 @@ namespace NeuronNetworkTestApp.Models
             }
             return null;
         }
-
         public static List<MapItem> Move(MapItem player, MoveType moveType, List<MapItem> map)
         {
             if (CanMove(player,moveType,map))
@@ -132,6 +127,25 @@ namespace NeuronNetworkTestApp.Models
                 return map;
             }
             return map;
+        }
+        public static MoveType ConvertBotResultToMove(double result)
+        {
+            if (result<0.25)
+            {
+                return MoveType.Forward;
+            }
+            else if (result<0.5)
+            {
+                return MoveType.Back;
+            }
+            else if (result<0.75)
+            {
+                return MoveType.Left;
+            }
+            else
+            {
+                return MoveType.Right;
+            }
         }
     }
 }

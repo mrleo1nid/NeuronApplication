@@ -100,7 +100,7 @@ namespace NeuralNetworks
                 return result;
             }
 
-            private double[,] Normalization(double[,] inputs)
+            public double[,] Normalization(double[,] inputs)
             {
                 var result = new double[inputs.GetLength(0), inputs.GetLength(1)];
 
@@ -131,6 +131,32 @@ namespace NeuralNetworks
                 }
 
                 return result;
+            }
+            public double[] Normalization(double[] inputs)
+            {
+                var result = new double[inputs.GetLength(0)];
+                // Среднее значение сигнала нейрона.
+                    var sum = 0.0;
+                    for (int row = 0; row < inputs.GetLength(0); row++)
+                    {
+                        sum += inputs[row];
+                    }
+                    var average = sum / inputs.GetLength(0);
+
+                    // Стандартное квадратичное отклонение нейрона.
+                    var error = 0.0;
+                    for (int row = 0; row < inputs.GetLength(0); row++)
+                    {
+                        error += Math.Pow((inputs[row] - average), 2);
+                    }
+
+                    var standardError = Math.Sqrt(error / inputs.GetLength(0));
+
+                    for (int row = 0; row < inputs.GetLength(0); row++)
+                    {
+                        result[row] = (inputs[row] - average) / standardError;
+                    }
+                    return result;
             }
 
             private double Backpropagation(double exprected, params double[] inputs)

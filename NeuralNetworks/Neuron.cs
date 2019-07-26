@@ -19,7 +19,6 @@ namespace NeuralNetworks
             NeuronType = type;
             Weights = new List<double>();
             Inputs = new List<double>();
-
             InitWeightsRandomValue(inputCount);
         }
 

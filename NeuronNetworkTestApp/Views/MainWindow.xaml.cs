@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -16,6 +17,7 @@ namespace NeuronNetworkTestApp.Views
     public partial class MainWindow : Window
     {
         bool TrainMode { get; set; }
+        bool Life { get; set; }
         List<double[]> TrainData { get; set; }
         NeuralNetwork NeuralNetwork { get; set; }
         List<MapItem> Map { get; set; }
@@ -23,12 +25,21 @@ namespace NeuronNetworkTestApp.Views
         private int MapSize = 10;
         MapItem Player { get; set; }
         MapItem Finish { get; set; }
+        int Errors { get; set; }
+        int MoveCount { get; set; }
+        TaskFactory TaskFactory { get; set; }
+        int NotWorryError { get; set; }
 
         public MainWindow()
         {
             InitializeComponent();
-            var topology = new Topology(8, 2, 0.2, 4);
+            var topology = new Topology(8, 1, 0.2, 4,4,2,2);
             NeuralNetwork = new NeuralNetwork(topology);
+            Errors = 0;
+            Life = false;
+            NotWorryError = 5;
+            TaskFactory = new TaskFactory();
+            TrainData = new List<double[]>();
             InitializeData();
         }
 
@@ -46,17 +57,96 @@ namespace NeuronNetworkTestApp.Views
             CreateMap();
             Player = Moving.GetPlayer(Map);
             Finish = Moving.GetFinish(Map);
+            TrainingFromDataset();
         }
-
+        private void Dolife()
+        {
+            while (Life)
+            {
+                Move();
+                MoveCount += 1;
+                Thread.Sleep(100);
+            }
+        }
         private void Move()
         {
-
+            var sensorData = Moving.GetSensorData(Map, Player);
+            double[] inputsignal = new double[]
+            {
+                sensorData[0],
+                sensorData[1],
+                sensorData[2],
+                sensorData[3],
+                Player.X,
+                Player.Y,
+                Finish.X,
+                Finish.Y
+            };
+            inputsignal = NeuralNetwork.Normalization(inputsignal);
+            var res = NeuralNetwork.Predict(inputsignal).Output;
+            Log($"Результат вычислений {res}");
+            var action = Moving.ConvertBotResultToMove(res);
+            Log($"Бот решает {action}");
+            if (Moving.CanMove(Player,action,Map))
+            {
+                Map = Moving.Move(Player, action, Map);
+                UpdateMap();
+                Player = Moving.GetPlayer(Map);
+                Log($"Удачно выполнено {action}");
+                AddTryToDataSet(res);
+                EndMove();
+            }
+            else
+            {
+                Log($"Невозможно выполнить {action}");
+                Errors += 1;
+                AddErorToDataSet();
+            }
         }
-
-
+        private void EndMove()
+        {
+            if (CheckGameEnd())
+            {
+                Life = false;
+                NotWorryError += 5;
+                Log($"Бот успешно добрался до финиша, ходов потребовалось - {MoveCount} \n Количество прощаемых ошибок до мутации увеличено на 10 теперь {NotWorryError}");
+                Dispatcher.Invoke((Action)(() => { ButtonMove.Content = "Start"; }));
+            }
+        }
+        private void Mutate()
+        {
+            Random random = new Random();
+            var learnrate = random.NextDouble();
+            var hidenLayCount = random.Next(1, 16);
+            List<int> hiddeList = new List<int>();
+            Log($"Сеть мутирует и приобретает следующие характеристики: \n LearnRate={learnrate} \n HiddenLayerCount={hidenLayCount}");
+            for (int i = 0; i < hidenLayCount; i++)
+            {
+                var hiddenneuron = random.Next(1, 8);
+                Log($"HiddenLayer{i} neuronCount = {hiddenneuron}");
+                hiddeList.Add(hiddenneuron);
+            }
+            var topology = new Topology(8, 4, learnrate, hiddeList.ToArray());
+            NeuralNetwork = new NeuralNetwork(topology);
+            Errors = 0;
+            TrainingFromDataset();
+        }
         private void ButtonStart_OnClick(object sender, RoutedEventArgs e)
         {
-            Move();
+            if (Life)
+            {
+                Life = false;
+                ButtonMove.Content = "Start";
+                ButtonTrain.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                Life = true;
+                MoveCount = 0;
+                ButtonMove.Content = "Stop";
+                ButtonTrain.Visibility = Visibility.Collapsed;
+                TaskFactory.StartNew(Dolife);
+            }
         }
         private void TextBlockLog_OnTextChanged(object sender, TextChangedEventArgs e)
         {
@@ -116,7 +206,6 @@ namespace NeuronNetworkTestApp.Views
         {
             Dispatcher.Invoke((Action)(() => { TextBlockLog.Text += $"\n {DateTime.Now.ToString("T")} : {text}"; }));
         }
-
         private void ButtonTrain_OnClick(object sender, RoutedEventArgs e)
         {
             if (TrainMode==false)
@@ -137,7 +226,6 @@ namespace NeuronNetworkTestApp.Views
                EndTrain();
             }
         }
-
         private bool CheckGameEnd()
         {
             if (Player.Y == Finish.Y && Player.X == Finish.X)
@@ -149,7 +237,6 @@ namespace NeuronNetworkTestApp.Views
                 return false;
             }
         }
-
         private void EndTrain()
         {
             TrainHelper.SaveTrainData(TrainData);
@@ -162,8 +249,10 @@ namespace NeuronNetworkTestApp.Views
             ButtonTrain.Content = "Train";
             Map = LastMapBackup;
             UpdateMap();
+            Player = Moving.GetPlayer(Map);
+            Finish = Moving.GetFinish(Map);
+            TrainingFromDataset();
         }
-
         private void ButtonForward_OnClick(object sender, RoutedEventArgs e)
         {
             var sensorData = Moving.GetSensorData(Map, Player);
@@ -182,7 +271,7 @@ namespace NeuronNetworkTestApp.Views
                     Player.Y,
                     Finish.X,
                     Finish.Y,
-                    0
+                    0.01
                 };
                 TrainData.Add(trainRow);
                 if (CheckGameEnd())
@@ -214,7 +303,7 @@ namespace NeuronNetworkTestApp.Views
                     Player.Y,
                     Finish.X,
                     Finish.Y,
-                    1
+                    0.5
                 };
                 TrainData.Add(trainRow);
                 if (CheckGameEnd())
@@ -245,7 +334,7 @@ namespace NeuronNetworkTestApp.Views
                     Player.Y,
                     Finish.X,
                     Finish.Y,
-                    2
+                    0.4
                 };
                 TrainData.Add(trainRow);
                 if (CheckGameEnd())
@@ -276,7 +365,7 @@ namespace NeuronNetworkTestApp.Views
                     Player.Y,
                     Finish.X,
                     Finish.Y,
-                    3
+                    0.25
                 };
                 TrainData.Add(trainRow);
                 if (CheckGameEnd())
@@ -288,6 +377,110 @@ namespace NeuronNetworkTestApp.Views
             {
                 Log("Препятствие мешает переместится");
             }
+        }
+        private void TrainingFromDataset()
+        {
+            var dataset = TrainHelper.GetTrainData().ToArray();
+            List<double> truevaluelist = new List<double>();
+            if (dataset.Length>0)
+            {
+                for (int i = 0; i < dataset.Length; i++)
+                {
+                    truevaluelist.Add(dataset[i].Last());
+                    Array.Resize(ref dataset[i],8);
+                }
+                double[] trueDoublesarr = truevaluelist.ToArray();
+                if (trueDoublesarr.Length!= dataset.Length)
+                {
+                    Log("Не удалось загрузить датасет, датасет имеет неверный формат");
+                    return;
+                }
+                Train(TrainHelper.CreateMatrixToArray(dataset),trueDoublesarr);
+            }
+            else
+            {
+                Log("Не удалось загрузить датасет так как он пуст");
+            }
+        }
+        private void Train(double[,] dataset, double[] truevalues)
+        {
+            dataset = NeuralNetwork.Normalization(dataset);
+            var difference = NeuralNetwork.Learn(truevalues, dataset, 10);
+            Log($"Бот успешно обучен. difference={difference}");
+        }
+        private void TrainToOneRow(double[] trainrow, double truevalue)
+        {
+            double[] trueVal = new double[]
+            {
+                truevalue
+            };
+           double[][] inputs = new double[][]
+           {
+               trainrow
+           };
+           Train(TrainHelper.CreateMatrixToArray(inputs),trueVal);
+        }
+        private void AddErorToDataSet()
+        {
+            var sensorData = Moving.GetSensorData(Map, Player);
+            var trainRow = new double[]
+            {
+                sensorData[0],
+                sensorData[1],
+                sensorData[2],
+                sensorData[3],
+                Player.X,
+                Player.Y,
+                Finish.X,
+                Finish.Y
+            };
+            TrainData.Add(trainRow);
+            TrainHelper.SaveTrainData(TrainData);
+            TrainToOneRow(trainRow, GetFirstNotErrorMove(sensorData));
+        }
+        private void AddTryToDataSet(double result)
+        {
+            var sensorData = Moving.GetSensorData(Map, Player);
+            var trainRow = new double[]
+            {
+                sensorData[0],
+                sensorData[1],
+                sensorData[2],
+                sensorData[3],
+                Player.X,
+                Player.Y,
+                Finish.X,
+                Finish.Y,
+            };
+            TrainData.Add(trainRow);
+            TrainHelper.SaveTrainData(TrainData);
+            TrainToOneRow(trainRow,result);
+        }
+        private double GetFirstNotErrorMove(double[] sensorData)
+        {
+            Random random = new Random(DateTime.Now.Millisecond/Int32.MaxValue);
+            bool canMove = false;
+            while (!canMove)
+            {
+                var rndseed = random.Next(0, 3);
+                if (sensorData[0] == 1 && rndseed==0)
+                {
+                    return 0.14;
+                }
+                else if (sensorData[1] == 1 && rndseed == 1)
+                {
+                    return 0.5;
+                }
+                else if (sensorData[2] == 1 && rndseed == 2)
+                {
+                    return 0.31;
+                }
+                else if (sensorData[3] == 1 && rndseed == 3)
+                {
+                    return 0.2;
+                }
+            }
+            return 0;
         }
     }
 }
