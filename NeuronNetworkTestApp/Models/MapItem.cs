@@ -9,13 +9,13 @@ namespace NeuronNetworkTestApp.Models
     public class MapItem
     {
         public Guid ID { get; set; }
-        public int X { get; set; }
-        public int Y { get; set; }
+        public double X { get; set; }
+        public double Y { get; set; }
         public string Icon { get; set; }
 
         public MapItemType MapItemType { get; set; }
 
-        public MapItem(Guid id, int x, int y, MapItemType type = MapItemType.FreePlace)
+        public MapItem(Guid id, double x, double y, MapItemType type = MapItemType.FreePlace)
         {
             ID = id;
             X = x;

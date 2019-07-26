@@ -41,7 +41,7 @@ namespace NeuronNetworkTestApp.Models
             return list;
         }
 
-        public static List<MapItem> ChangeItemType(List<MapItem> itemslist, int x, int y, MapItemType type = MapItemType.FreePlace)
+        public static List<MapItem> ChangeItemType(List<MapItem> itemslist, double x, double y, MapItemType type = MapItemType.FreePlace)
         {
             var element = itemslist.Where(item => item.X == x && item.Y == y).FirstOrDefault();
             if (element!=null)

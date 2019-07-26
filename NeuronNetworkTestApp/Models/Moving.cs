@@ -70,20 +70,20 @@ namespace NeuronNetworkTestApp.Models
 
             return result;
         }
-        public static Tuple<int,int> ConvertMovingTypeToCoord(MoveType type, MapItem player)
+        public static Tuple<double, double> ConvertMovingTypeToCoord(MoveType type, MapItem player)
         {
             switch (type)
             {
                 case MoveType.Forward:
-                    return new Tuple<int, int>(player.X-1,player.Y);
+                    return new Tuple<double, double>(player.X-1,player.Y);
                 case MoveType.Back:
-                    return new Tuple<int, int>(player.X + 1, player.Y);
+                    return new Tuple<double, double>(player.X + 1, player.Y);
                 case MoveType.Left:
-                    return new Tuple<int, int>(player.X, player.Y-1);
+                    return new Tuple<double, double>(player.X, player.Y-1);
                 case MoveType.Right:
-                    return new Tuple<int, int>(player.X, player.Y+1);
+                    return new Tuple<double, double>(player.X, player.Y+1);
                 default:
-                    return new Tuple<int, int>(player.X, player.Y);
+                    return new Tuple<double, double>(player.X, player.Y);
             }
         }
         public static bool CanMove(MapItem player, MoveType moveType, List<MapItem> map)
@@ -106,7 +106,7 @@ namespace NeuronNetworkTestApp.Models
                 return false;
             }
         }
-        public static MapItem GetItemFromCoord(List<MapItem> map,int x, int y)
+        public static MapItem GetItemFromCoord(List<MapItem> map, double x, double y)
         {
             var element = map.Where(item => item.X == x && item.Y == y).FirstOrDefault();
             if (element != null)

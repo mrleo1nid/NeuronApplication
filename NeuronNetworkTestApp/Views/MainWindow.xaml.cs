@@ -33,7 +33,7 @@ namespace NeuronNetworkTestApp.Views
         public MainWindow()
         {
             InitializeComponent();
-            var topology = new Topology(8, 1, 0.2, 4,4);
+            var topology = new Topology(8, 1, 0.2, 4,4,4,2);
             NeuralNetwork = new NeuralNetwork(topology);
             Errors = 0;
             Life = false;
@@ -65,7 +65,7 @@ namespace NeuronNetworkTestApp.Views
             {
                 Move();
                 MoveCount += 1;
-                Thread.Sleep(100);
+                Thread.Sleep(1000);
             }
         }
         private void Move()
@@ -77,12 +77,12 @@ namespace NeuronNetworkTestApp.Views
                 sensorData[1],
                 sensorData[2],
                 sensorData[3],
-                Player.X,
-                Player.Y,
-                Finish.X,
-                Finish.Y
+                Player.X/10,
+                Player.Y/10,
+                Finish.X/10,
+                Finish.Y/10
             };
-          //  inputsignal = NeuralNetwork.Normalization(inputsignal);
+            //inputsignal = NeuralNetwork.Normalization(inputsignal);
             var res = NeuralNetwork.Predict(inputsignal).Output;
             Log($"Результат вычислений {res}");
             var action = Moving.ConvertBotResultToMove(res);
@@ -404,8 +404,8 @@ namespace NeuronNetworkTestApp.Views
         }
         private void Train(double[,] dataset, double[] truevalues)
         {
-            //  dataset = NeuralNetwork.Normalization(dataset);
-            var difference = NeuralNetwork.Learn(truevalues, dataset, 10);
+            // dataset = NeuralNetwork.Normalization(dataset);
+            var difference = NeuralNetwork.Learn(truevalues, dataset, 1000);
             Log($"Бот успешно обучен. difference={difference}");
         }
         private void TrainToOneRow(double[] trainrow, double truevalue)
@@ -414,11 +414,12 @@ namespace NeuronNetworkTestApp.Views
             {
                 truevalue
             };
-           double[][] inputs = new double[][]
+            Array.Resize(ref trainrow,8);
+            double[][] inputs = new double[][]
            {
                trainrow
            };
-           Train(TrainHelper.CreateMatrixToArray(inputs),trueVal);
+            Train(TrainHelper.CreateMatrixToArray(inputs),trueVal);
         }
         private void AddErorToDataSet()
         {
@@ -429,10 +430,11 @@ namespace NeuronNetworkTestApp.Views
                 sensorData[1],
                 sensorData[2],
                 sensorData[3],
-                Player.X,
-                Player.Y,
-                Finish.X,
-                Finish.Y
+                Player.X/10,
+                Player.Y/10,
+                Finish.X/10,
+                Finish.Y/10,
+                GetFirstNotErrorMove(sensorData)
             };
             TrainData.Add(trainRow);
             TrainHelper.SaveTrainData(TrainData);
@@ -447,10 +449,11 @@ namespace NeuronNetworkTestApp.Views
                 sensorData[1],
                 sensorData[2],
                 sensorData[3],
-                Player.X,
-                Player.Y,
-                Finish.X,
-                Finish.Y,
+                Player.X/10,
+                Player.Y/10,
+                Finish.X/10,
+                Finish.Y/10,
+                result
             };
             TrainData.Add(trainRow);
             TrainHelper.SaveTrainData(TrainData);
@@ -465,19 +468,19 @@ namespace NeuronNetworkTestApp.Views
                 var rndseed = random.Next(0, 3);
                 if (sensorData[0] == 1 && rndseed==0)
                 {
-                    return 0.14;
+                    return 0.1;
                 }
                 else if (sensorData[1] == 1 && rndseed == 1)
                 {
-                    return 0.5;
+                    return 0.4;
                 }
                 else if (sensorData[2] == 1 && rndseed == 2)
                 {
-                    return 0.31;
+                    return 0.6;
                 }
                 else if (sensorData[3] == 1 && rndseed == 3)
                 {
-                    return 0.2;
+                    return 0.9;
                 }
             }
             return 0;
