@@ -58,7 +58,12 @@ namespace NeuronNetworkTestApp.Models
             Random random = new Random();
             for (int i = 0; i < count; i++)
             {
-                map = ChangeItemType(map, random.Next(0,mapSize-1), random.Next(0, mapSize - 1), MapItemType.Wall);
+                var wallx = random.Next(0, mapSize - 1);
+                var wally = random.Next(0, mapSize - 1);
+                if (Moving.GetItemFromCoord(map,wallx,wally).MapItemType == MapItemType.FreePlace)
+                {
+                    map = ChangeItemType(map, wallx, wally, MapItemType.Wall);
+                }
             }
             return map;
         }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -28,32 +29,30 @@ namespace NeuronNetworkTestApp.Views
         int Errors { get; set; }
         int MoveCount { get; set; }
         TaskFactory TaskFactory { get; set; }
-        int NotWorryError { get; set; }
+        Logging Logger { get; set; }
+        private bool GameOver = false;
+        Random Random { get; set; }
+        int WallCount { get; set; }
+        double DistanceToFinish { get; set; }
+        private bool AutoTrain = true;
 
         public MainWindow()
         {
             InitializeComponent();
-            var topology = new Topology(8, 1, 0.2, 4,4,4,2);
+            InitializeData();
+        }
+        private void InitializeData()
+        {
+            Random = new Random();
+            var topology = new Topology(9, 1, 0.2, 6,6,4,4,2);
             NeuralNetwork = new NeuralNetwork(topology);
             Errors = 0;
             Life = false;
-            NotWorryError = 5;
+            WallCount = 8;
+            Logger = new Logging();
             TaskFactory = new TaskFactory();
             TrainData = new List<double[]>();
-            InitializeData();
-        }
-
-        private void InitializeData()
-        {
             TrainMode = false;
-            Map = MapCreator.CreateDefaultMap(MapSize);
-            var playerX = MapSize / 2;
-            var playerY = MapSize / 2;
-            Map = MapCreator.ChangeItemType(Map, playerX, playerY, MapItemType.Player);//Add player
-            Map = MapCreator.ChangeItemType(Map, 5, 6, MapItemType.Wall); //Add Wall
-            Map = MapCreator.ChangeItemType(Map, 4, 5, MapItemType.Wall); //Add Wall
-            Map = MapCreator.CreateRandomWall(Map, 3, MapSize);
-            Map = MapCreator.CreateRandomFinish(Map, MapSize);
             CreateMap();
             Player = Moving.GetPlayer(Map);
             Finish = Moving.GetFinish(Map);
@@ -70,6 +69,7 @@ namespace NeuronNetworkTestApp.Views
         }
         private void Move()
         {
+            DistanceToFinish = Moving.GetDistance(Player.X,Player.Y, Finish);
             var sensorData = Moving.GetSensorData(Map, Player);
             double[] inputsignal = new double[]
             {
@@ -77,39 +77,46 @@ namespace NeuronNetworkTestApp.Views
                 sensorData[1],
                 sensorData[2],
                 sensorData[3],
-                Player.X/10,
-                Player.Y/10,
-                Finish.X/10,
-                Finish.Y/10
+                Player.X/MapSize,
+                Player.Y/MapSize,
+                Finish.X/MapSize,
+                Finish.Y/MapSize,
+                1/Moving.GetDistance(Player.X,Player.Y,Finish)
             };
-            //inputsignal = NeuralNetwork.Normalization(inputsignal);
             var res = NeuralNetwork.Predict(inputsignal).Output;
             Log($"Результат вычислений {res}");
             var action = Moving.ConvertBotResultToMove(res);
             Log($"Бот решает {action}");
             if (Moving.CanMove(Player,action,Map))
             {
+                if (AutoTrain)
+                {
+                    var newCoord = Moving.ConvertMovingTypeToCoord(action, Player);
+                    AddTryToDataSet(newCoord, res);
+                }
                 Map = Moving.Move(Player, action, Map);
                 UpdateMap();
                 Player = Moving.GetPlayer(Map);
                 Log($"Удачно выполнено {action}");
-                AddTryToDataSet(res);
                 EndMove();
             }
             else
             {
                 Log($"Невозможно выполнить {action}");
                 Errors += 1;
-                AddErorToDataSet();
+                if (AutoTrain)
+                {
+                    AddErorToDataSet();
+                }
             }
         }
         private void EndMove()
         {
             if (CheckGameEnd())
             {
+                GameOver = true;
                 Life = false;
-                NotWorryError += 5;
-                Log($"Бот успешно добрался до финиша, ходов потребовалось - {MoveCount} \n Количество прощаемых ошибок до мутации увеличено на 10 теперь {NotWorryError}");
+                Log($"Бот успешно добрался до финиша, ходов потребовалось - {MoveCount}, Ошибок совершено - {Errors}");
                 Dispatcher.Invoke((Action)(() => { ButtonMove.Content = "Start"; }));
             }
         }
@@ -141,11 +148,27 @@ namespace NeuronNetworkTestApp.Views
             }
             else
             {
-                Life = true;
-                MoveCount = 0;
-                ButtonMove.Content = "Stop";
-                ButtonTrain.Visibility = Visibility.Collapsed;
-                TaskFactory.StartNew(Dolife);
+                if (GameOver)
+                {
+                    GameOver = false;
+                    CreateNewMap();
+                    Player = Moving.GetPlayer(Map);
+                    Finish = Moving.GetFinish(Map);
+                    Life = true;
+                    MoveCount = 0;
+                    ButtonMove.Content = "Stop";
+                    ButtonTrain.Visibility = Visibility.Collapsed;
+                    TaskFactory.StartNew(Dolife);
+                }
+                else
+                {
+                    GameOver = false;
+                    Life = true;
+                    MoveCount = 0;
+                    ButtonMove.Content = "Stop";
+                    ButtonTrain.Visibility = Visibility.Collapsed;
+                    TaskFactory.StartNew(Dolife);
+                }
             }
         }
         private void TextBlockLog_OnTextChanged(object sender, TextChangedEventArgs e)
@@ -154,6 +177,8 @@ namespace NeuronNetworkTestApp.Views
         }
         private void CreateMap()
         {
+            Map = new List<MapItem>();
+            Map = MapCreator.CreateDefaultMap(MapSize);
             this.Height = MapSize * 50 + 50 + 200;
             this.Width = MapSize * 50 + 50;
             GridAll.ShowGridLines = true;
@@ -185,6 +210,23 @@ namespace NeuronNetworkTestApp.Views
                     GridAll.Children.Add(textBlock);
                 }
             }
+            var playerX = MapSize / 2;
+            var playerY = MapSize / 2;
+            Map = MapCreator.CreateRandomWall(Map, WallCount, MapSize);
+            Map = MapCreator.ChangeItemType(Map, playerX, playerY, MapItemType.Player);//Add player
+            Map = MapCreator.CreateRandomFinish(Map, MapSize);
+            UpdateMap();
+        }
+        private void CreateNewMap()
+        {
+            WallCount ++;
+            Map = new List<MapItem>();
+            Map = MapCreator.CreateDefaultMap(MapSize);
+            var playerX = MapSize / 2;
+            var playerY = MapSize / 2;
+            Map = MapCreator.CreateRandomWall(Map, WallCount, MapSize);
+            Map = MapCreator.ChangeItemType(Map, playerX, playerY, MapItemType.Player);//Add player
+            Map = MapCreator.CreateRandomFinish(Map, MapSize);
             UpdateMap();
         }
         private void UpdateMap()
@@ -204,7 +246,9 @@ namespace NeuronNetworkTestApp.Views
         }
         private void Log(string text)
         {
-            Dispatcher.Invoke((Action)(() => { TextBlockLog.Text += $"\n {DateTime.Now.ToString("T")} : {text}"; }));
+            var logtext = $"\n {DateTime.Now.ToString("T")} : {text}";
+            Logger.LogString(logtext);
+            Dispatcher.Invoke((Action)(() => { TextBlockLog.Text += $"{logtext}"; }));
         }
         private void ButtonTrain_OnClick(object sender, RoutedEventArgs e)
         {
@@ -405,7 +449,7 @@ namespace NeuronNetworkTestApp.Views
         private void Train(double[,] dataset, double[] truevalues)
         {
             // dataset = NeuralNetwork.Normalization(dataset);
-            var difference = NeuralNetwork.Learn(truevalues, dataset, 1000);
+            var difference = NeuralNetwork.Learn(truevalues, dataset, 10000);
             Log($"Бот успешно обучен. difference={difference}");
         }
         private void TrainToOneRow(double[] trainrow, double truevalue)
@@ -414,7 +458,6 @@ namespace NeuronNetworkTestApp.Views
             {
                 truevalue
             };
-            Array.Resize(ref trainrow,8);
             double[][] inputs = new double[][]
            {
                trainrow
@@ -424,6 +467,24 @@ namespace NeuronNetworkTestApp.Views
         private void AddErorToDataSet()
         {
             var sensorData = Moving.GetSensorData(Map, Player);
+            bool trueresult = false;
+            int counter = 0;
+            double newres = 0;
+            while (!trueresult)
+            {
+                newres = GetFirstNotErrorMove(sensorData);
+                var newcoord = Moving.ConvertMovingTypeToCoord(Moving.ConvertBotResultToMove(newres), Player);
+                if (Moving.GetDistance(newcoord.Item1,newcoord.Item2,Finish)<DistanceToFinish)
+                {
+                    trueresult = true;
+                }
+                else if (counter>20)
+                {
+                    trueresult = true;
+                }
+                counter++;
+            }
+            Log($"Обучение говорит боту делать {Moving.ConvertBotResultToMove(newres)}");
             var trainRow = new double[]
             {
                 sensorData[0],
@@ -434,56 +495,91 @@ namespace NeuronNetworkTestApp.Views
                 Player.Y/10,
                 Finish.X/10,
                 Finish.Y/10,
-                GetFirstNotErrorMove(sensorData)
+                1/Moving.GetDistance(Player.X,Player.Y,Finish)
             };
             TrainData.Add(trainRow);
             TrainHelper.SaveTrainData(TrainData);
-            TrainToOneRow(trainRow, GetFirstNotErrorMove(sensorData));
+            TrainToOneRow(trainRow, newres);
         }
-        private void AddTryToDataSet(double result)
+        private void AddTryToDataSet(Tuple<double,double> newcoord, double result)
         {
-            var sensorData = Moving.GetSensorData(Map, Player);
-            var trainRow = new double[]
+            var newDistance = Moving.GetDistance(newcoord.Item1, newcoord.Item2, Finish);
+            if (newDistance<DistanceToFinish)
             {
-                sensorData[0],
-                sensorData[1],
-                sensorData[2],
-                sensorData[3],
-                Player.X/10,
-                Player.Y/10,
-                Finish.X/10,
-                Finish.Y/10,
-                result
-            };
-            TrainData.Add(trainRow);
-            TrainHelper.SaveTrainData(TrainData);
-            TrainToOneRow(trainRow,result);
+                var sensorData = Moving.GetSensorData(Map, Player);
+                var trainRow = new double[]
+                {
+                    sensorData[0],
+                    sensorData[1],
+                    sensorData[2],
+                    sensorData[3],
+                    Player.X/10,
+                    Player.Y/10,
+                    Finish.X/10,
+                    Finish.Y/10,
+                    1/Moving.GetDistance(Player.X,Player.Y,Finish)
+                };
+                TrainData.Add(trainRow);
+                TrainHelper.SaveTrainData(TrainData);
+                TrainToOneRow(trainRow, result);
+            }
+            else
+            {
+                AddErorToDataSet();
+            }
+
         }
         private double GetFirstNotErrorMove(double[] sensorData)
         {
-            Random random = new Random(DateTime.Now.Millisecond/Int32.MaxValue);
+            var x = Player.X - Finish.X;
+            var y = Player.Y - Finish.Y;
             bool canMove = false;
             while (!canMove)
             {
-                var rndseed = random.Next(0, 3);
-                if (sensorData[0] == 1 && rndseed==0)
+               
+                if (sensorData[0] == 1 && x>0)
                 {
                     return 0.1;
                 }
-                else if (sensorData[1] == 1 && rndseed == 1)
+                else if (sensorData[1] == 1 && x<0)
                 {
                     return 0.4;
                 }
-                else if (sensorData[2] == 1 && rndseed == 2)
+                else if (sensorData[2] == 1 && y>0)
                 {
                     return 0.6;
                 }
-                else if (sensorData[3] == 1 && rndseed == 3)
+                else if (sensorData[3] == 1 && y<0)
                 {
                     return 0.9;
                 }
+                else
+                {
+                    var rseed = Random.Next(0, 1000);
+                    if (sensorData[3] == 1 && rseed<250)
+                    {
+                        return 0.9;
+                    }
+                    else if (sensorData[2] == 1 && rseed < 500)
+                    {
+                        return 0.6;
+                    }
+                    else if (sensorData[1] == 1 && rseed < 750)
+                    {
+                        return 0.4;
+                    }
+                    else if (sensorData[0] == 1 && rseed < 1000)
+                    {
+                        return 0.1;
+                    }
+                }
             }
             return 0;
+        }
+
+        private void MainWindow_OnClosing(object sender, CancelEventArgs e)
+        {
+           
         }
     }
 }

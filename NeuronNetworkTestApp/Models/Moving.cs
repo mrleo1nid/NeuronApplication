@@ -128,6 +128,14 @@ namespace NeuronNetworkTestApp.Models
             }
             return map;
         }
+        public static double GetDistance(double playerX,double playerY, MapItem finish)
+        {
+            var x = playerX - finish.X;
+            var y = playerY - finish.Y;
+            x = Math.Abs(x);
+            y = Math.Abs(y);
+            return y + x;
+        }
         public static MoveType ConvertBotResultToMove(double result)
         {
             if (result<0.25)
