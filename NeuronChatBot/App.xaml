@@ -1,7 +1,7 @@
-﻿<Application x:Class="NeuronNetworkTestApp.App"
+﻿<Application x:Class="NeuronChatBot.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:NeuronNetworkTestApp"
+             xmlns:local="clr-namespace:NeuronChatBot"
              StartupUri="Views/MainWindow.xaml">
     <Application.Resources>
          

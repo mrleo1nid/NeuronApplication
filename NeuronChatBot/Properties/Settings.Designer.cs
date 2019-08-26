@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace NeuronNetworkTestApp.Properties
+namespace NeuronChatBot.Properties
 {
 
 

@@ -24,19 +24,11 @@ namespace NeuralNetworks
                 CreateOutputLayer();
             }
 
-            public Neuron Predict(params double[] inputSignals)
+            public List<Neuron> Predict(params double[] inputSignals)
             {
                 SendSignalsToInputNeurons(inputSignals);
                 FeedForwardAllLayersAfterInput();
-
-                if (Topology.OutputCount == 1)
-                {
-                    return Layers.Last().Neurons[0];
-                }
-                else
-                {
-                    return Layers.Last().Neurons.OrderByDescending(n => n.Output).First();
-                }
+                return Layers.Last().Neurons;
             }
 
             public double Learn(double[] expected, double[,] inputs, int epoch)
@@ -102,7 +94,7 @@ namespace NeuralNetworks
 
             private double Backpropagation(double exprected, params double[] inputs)
             {
-                var actual = Predict(inputs).Output;
+                var actual = Predict(inputs).First().Output;
 
                 var difference = actual - exprected;
 
