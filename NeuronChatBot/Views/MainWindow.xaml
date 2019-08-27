@@ -12,6 +12,11 @@
             <RowDefinition Height="56*"/>
         </Grid.RowDefinitions>
         <TextBox Name="TextBoxInput" Grid.Row="0" Margin="10"></TextBox>
-        <Button Grid.Row="1" Margin="10" Content="Добавить в БД" Name="ButtonAddDB" Click="ButtonAddDB_OnClick"></Button>
+        <StackPanel Grid.Row="1" Orientation="Horizontal" >
+            <Button Margin="5"  Content="Добавить в БД" Name="ButtonAddDB" Click="ButtonAddDB_OnClick"></Button>
+            <Button Margin="5"  Content="Загрузить из файла" Name="ButtonLoadFromFile" Click="ButtonLoadFromFile_OnClick"></Button>
+            <Button Margin="5"  Content="Загрузить из файла для обучения" Name="ButtonLoadFromFileLearn" Click="ButtonLoadFromFileLearn_OnClick"></Button>
+        </StackPanel>
+       
     </Grid>
 </Window>

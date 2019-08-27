@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace NeuronChatBot.Storage
+namespace NeuralBotBase.Storage
 {
     public class StorageRow
     {

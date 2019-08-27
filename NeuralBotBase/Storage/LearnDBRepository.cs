@@ -5,11 +5,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace NeuronChatBot.Storage
+namespace NeuralBotBase.Storage
 {
     public class LearnDBRepository
     {
-        private string StorageBdName = "Storage/Learn.db";
+        private string StorageBdName = "C:/Users/Леонид/Desktop/Storage/Learn.db";
 
         public LearnRow GetStorageRowFromID(int id)
         {
@@ -29,6 +29,26 @@ namespace NeuronChatBot.Storage
             }
             connection.Close();
             return storage;
+        }
+        public List<LearnRow> GetStorageRow()
+        {
+            List<LearnRow> list = new List<LearnRow>();
+            SQLiteConnection connection =
+                new SQLiteConnection(string.Format("Data Source={0};", StorageBdName));
+            connection.Open();
+            SQLiteCommand command = new SQLiteCommand("SELECT * FROM LearnTable", connection);
+            var reader = command.ExecuteReader();
+            while (reader.Read())
+            {
+                LearnRow storage = new LearnRow();
+                storage.ID = -1;
+                storage.ID = Convert.ToInt32(reader[0]);
+                storage.Request = (string)reader[1];
+                storage.Responce = (string)reader[2];
+                list.Add(storage);
+            }
+            connection.Close();
+            return list;
         }
 
         public void AddStorageRow(string request,string responce)

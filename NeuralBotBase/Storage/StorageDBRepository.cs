@@ -5,11 +5,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace NeuronChatBot.Storage
+namespace NeuralBotBase.Storage
 {
     public class StorageDBRepository
     {
-        private string StorageBdName = "Storage/Storage.db";
+        private string StorageBdName = "C:/Users/Леонид/Desktop/Storage/Storage.db";
 
         public StorageRow GetStorageRowFromID(int id)
         {
@@ -53,7 +53,7 @@ namespace NeuronChatBot.Storage
             SQLiteConnection connection =
                 new SQLiteConnection(string.Format("Data Source={0};", StorageBdName));
             connection.Open();
-            SQLiteCommand command = new SQLiteCommand("INSERT INTO StorageTable ('Text') VALUES (@Text)", connection);
+            SQLiteCommand command = new SQLiteCommand("INSERT OR IGNORE INTO StorageTable ('Text') VALUES (@Text)", connection);
             command.Parameters.Add(new SQLiteParameter("@Text", text));
             command.ExecuteNonQuery();
             connection.Close();

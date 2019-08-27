@@ -1,0 +1,12 @@
+﻿<Window x:Class="NeuronChatBot.Views.ProgressView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:NeuronChatBot.Views"
+        mc:Ignorable="d"
+        Title="Прогресс" Height="93.75" Width="680.682">
+    <Grid>
+     <ProgressBar Name="ProgressBar" Margin="1"></ProgressBar>
+    </Grid>
+</Window>

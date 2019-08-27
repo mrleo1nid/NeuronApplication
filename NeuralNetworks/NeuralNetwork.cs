@@ -31,7 +31,7 @@ namespace NeuralNetworks
                 return Layers.Last().Neurons;
             }
 
-            public double Learn(double[] expected, double[,] inputs, int epoch)
+            public double Learn(double[] expected, double[] inputs, int epoch)
             {
                 var error = 0.0;
                 for (int i = 0; i < epoch; i++)
@@ -92,7 +92,7 @@ namespace NeuralNetworks
                 return result;
             }
 
-            private double Backpropagation(double exprected, params double[] inputs)
+            private double Backpropagation(double[] exprected, params double[] inputs)
             {
                 var actual = Predict(inputs).First().Output;
 
